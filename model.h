@@ -37,6 +37,7 @@ private:
     std::list<Position> snake;   // тело змейки (голова в начале)
     std::list<Rabbit> rabbits; // кролики
     int direction;  // 0=вверх, 1=вправо, 2=вниз, 3=влево
+    bool gameOver;
     
 public:
     // Конструктор (вызывается при создании объекта)
@@ -54,6 +55,7 @@ public:
     const std::list<Rabbit>& getRabbits() const;
     int getWidth() const;
     int getHeight() const;
+    bool isGameOver();
     // const в конце означает - "этот метод НЕ изменяет объект"
     // std::list<Position>& аналогично List* getSnake()
 };

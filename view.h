@@ -27,6 +27,7 @@ public:
     // Отрисовка всего
     void showRules();
     void render(const Model& model);
+    void showGameOver();
     
     // Проверка нажатия клавиши (для Controller)
     bool keyPressed();

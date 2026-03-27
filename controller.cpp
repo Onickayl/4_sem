@@ -43,6 +43,28 @@ void Controller::run()
         }
         
         model.update();         // обновляем состояние игры
+        // проверка
+        if (model.isGameOver())
+        {
+            view.showGameOver();
+
+            while (true) 
+            {
+                if(view.keyPressed())
+                {
+                    int key = view.getKey();
+                    
+                    if (key == 'q' || key == 'Q')
+                    {
+                        break;
+                    }
+                }
+
+                usleep(100000);
+            }
+
+            running = false;
+        }
         view.render(model);     // рисуем новый кадр
         usleep(speed);          // ждём
     }

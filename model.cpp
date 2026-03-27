@@ -2,8 +2,10 @@
 #include <cstdlib>  // для rand(), srand()
 #include <ctime>    // для time()
 
+
+
 // Конструктор
-Model::Model(int w, int h) : width(w), height(h), direction(1) 
+Model::Model(int w, int h) : width(w), height(h), direction(1), gameOver(false) 
 {
     // инициализируем генератор случайных чисел
     static bool seeded = false;
@@ -39,11 +41,40 @@ Model::Model(int w, int h) : width(w), height(h), direction(1)
 
 void Model::update() 
 {
+    
+    if (isGameOver())
+    {
+        return;
+    }
+
     // 1. Получаем голову (front() - первый элемент)
     Position head = snake.front();
     
     // 2. Вычисляем новую позицию головы
     Position newHead = head;
+
+    // если ударяется об рамку, то игра завершается
+    if (newHead.x <= 0 || newHead.x >= width-1 || newHead.y <= 0 || newHead.y >= height-1)
+    {
+        gameOver = true;
+        return;
+    }
+
+    // если ударяется об себя, то игра завершается
+    auto segment { snake.begin() };
+    ++segment;
+    for (segment; segment !=snake.end(); segment++)
+    {
+        int x = segment->x;
+        int y = segment->y;
+
+        if (x == newHead.x && y == newHead.y)
+        {
+            gameOver = true;
+            return; 
+        }
+    }
+
     switch(direction) 
     {
         case 0: newHead.y--; break;  // вверх
@@ -116,4 +147,9 @@ void Model::setDirection(int dir)
 int Model::getDirection() const 
 { 
     return direction; 
+}
+
+bool Model::isGameOver()
+{
+    return gameOver;
 }

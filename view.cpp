@@ -153,6 +153,8 @@ void View::render(const Model& model)
     
     int width = model.getWidth();
     int height = model.getHeight();
+
+    clearScreen();
     
     // Рамка
     for (int y = 0; y <= height + 1; y++) 
@@ -269,5 +271,22 @@ void View::showRules()
     }
 
     getKey();  // съедаем клавишу
+}
+
+
+void View::showGameOver()
+{
+    clearScreen();
+    
+    setColor(RED);
+    
+    std::cout << "==========================================\n";
+    std::cout << "             GAME OVER\n";
+    std::cout << "==========================================\n\n";
+
+    resetColor();
+
+    std::cout << "please press q/Q\n";
+
 }
 

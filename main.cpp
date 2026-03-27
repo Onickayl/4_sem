@@ -4,14 +4,14 @@
 
 int main() 
 {
-    // Создаем поле 20x20
+    // Создаем поле
     Model model(50, 20);
     View view;
 
     // Показываем правила перед началом
     view.showRules();
 
-    
+
     Controller controller(model, view);
     
     // Запускаем игру

@@ -2,9 +2,10 @@
 #define MODEL_H
 
 #include <list>
+#include <vector>
 
 
-// Только координаты (используется змейкой)
+// Только координаты
 struct Position 
 {
     int x, y;
@@ -19,15 +20,21 @@ Position p3(10);       // x=10, y=0
 */
 
 // змейка с дополнительными свойствами
-/*struct Snake 
+struct Snake 
 {
-    Position body;
-    bool isAlive;   // флаг только для змеек
-    int direction;  // 0=вверх, 1=вправо, 2=вниз, 3=влево
-    int color;      // цвет змейки 
+    std::list<Position> body;       // список позиций сегментов змейки
+    bool isAlive;                   // флаг только для змеек
+    int direction;                  // 0=вверх, 1=вправо, 2=вниз, 3=влево
+    //int color;                      // цвет змейки 
     
-    Snake(int x, int y) : body(x, y), isAlive(true) {}
-};*/
+    Snake(int x, int y) : isAlive(true), direction(1) 
+    {
+        // Создаем змейку из 3 сегментов
+        body.push_back(Position(x, y));         // голова
+        body.push_back(Position(x - 1, y));     // тело
+        body.push_back(Position(x - 2, y));     // хвост
+    }
+};
 
 // Кролик с дополнительными свойствами
 struct Rabbit 
@@ -45,30 +52,28 @@ private:
     int width;      // ширина поля
     int height;     // высота поля
 
-    // НАДО СПИСОК ЗМЕЕК!!!
-
-    std::list<Position> snake;         // тело змейки (голова в начале)
-    std::list<Rabbit> rabbits;      // кролики
-    int direction;  // 0=вверх, 1=вправо, 2=вниз, 3=влево
-    bool gameOver;      // флаг завершения игры
+    std::vector<Snake> snakes;           // вектор змеек
+    std::list<Rabbit> rabbits;           // кролики
+    bool gameOver;                       // флаг завершения игры
     
 public:
+
     // Конструктор (вызывается при создании объекта)
-    Model(int w, int h);
+    Model(int w, int h, int num_Snakes = 1);
     
     // Обновление состояния (один шаг игры)
     void update();
     
     // Изменение направления
-    void setDirection(int dir);
-    int getDirection() const;
+    void setDirection(int id_snake, int dir); 
+    int getDirection(int id_snake) const;
     
     // Геттеры (методы для получения данных)
-    const std::list<Position>& getSnake() const;
+    const std::vector<Snake>& getSnakes() const;
     const std::list<Rabbit>& getRabbits() const;
     int getWidth() const;
     int getHeight() const;
-    bool isGameOver();
+    bool isGameOver() const;
     // const в конце означает - "этот метод НЕ изменяет объект"
     // std::list<Position>& аналогично List* getSnake()
 };

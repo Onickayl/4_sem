@@ -5,7 +5,7 @@
 
 
 // Конструктор
-Model::Model(int w, int h) : width(w), height(h), direction(1), gameOver(false) 
+Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false)  //direction(1)
 {
     // инициализируем генератор случайных чисел
     static bool seeded = false;
@@ -21,14 +21,14 @@ Model::Model(int w, int h) : width(w), height(h), direction(1), gameOver(false)
     Кролики каждый раз в новых местах
     */
     
-    // Создаем змейку в центре
-    int centerX = width / 2;
-    int centerY = height / 2;
     
-    // push_back - добавить в конец списка
-    snake.push_back(Position(centerX, centerY));     // голова
-    snake.push_back(Position(centerX - 1, centerY)); // сегмент
-    snake.push_back(Position(centerX - 2, centerY)); // хвост
+    for (int i = 0; i < num_Snakes; i++)
+    {
+        int startX = width / (2 * (i+1));
+        int startY = height / (2 * (i+1));
+        
+        snakes.push_back(Snake(startX, startY));
+    }
     
     // Добавляем 3 кролика
     for (int i = 0; i < 3; i++) 
@@ -41,87 +41,96 @@ Model::Model(int w, int h) : width(w), height(h), direction(1), gameOver(false)
 
 void Model::update() 
 {
-    
+
     if (isGameOver())
     {
         return;
     }
 
-    // 1. Получаем голову (front() - первый элемент)
-    Position head = snake.front();
-    
-    // 2. Вычисляем новую позицию головы
-    Position newHead = head;
-
-    // если ударяется об рамку, то игра завершается
-    if (newHead.x <= 0 || newHead.x >= width-1 || newHead.y <= 0 || newHead.y >= height-1)
+    for(auto& snake : snakes)
     {
-        gameOver = true;
-        return;
-    }
-
-    // если ударяется об себя, то игра завершается
-    auto segment { snake.begin() };
-    ++segment;
-    for (segment; segment !=snake.end(); segment++)
-    {
-        int x = segment->x;
-        int y = segment->y;
-
-        if (x == newHead.x && y == newHead.y)
+        if (!snake.isAlive) 
         {
-            gameOver = true;
-            return; 
+            continue;  // пропускаем мертвых
         }
-    }
 
-    switch(direction) 
-    {
-        case 0: newHead.y--; break;  // вверх
-        case 1: newHead.x++; break;  // вправо
-        case 2: newHead.y++; break;  // вниз
-        case 3: newHead.x--; break;  // влево
-    }
-    
-    // 3. Добавляем новую голову
-    snake.push_front(newHead);
-    
-    // 4. Проверяем, съела ли змейка кролика (только у живых кроликов)
-    bool ateRabbit = false;
-    // & чтобы можно было менять значение переменной
-    // для каждого элемента rabbit в контейнере (список) rabbits
-    for (auto& rabbit : rabbits) 
-    {  
-        if (rabbit.isAlive && rabbit.pos.x == newHead.x && rabbit.pos.y == newHead.y) 
+        //1. получаем голову (front() - первый элемент)
+        Position head = snake.body.front();
+        
+        //2. вычисляем новую позицию головы
+        Position newHead = head;
+
+        switch(snake.direction) 
         {
-            rabbit.isAlive = false; // кролик становится невидимым
-            ateRabbit = true;
-            break;
+            case 0: newHead.y--; break;  // вверх
+            case 1: newHead.x++; break;  // вправо
+            case 2: newHead.y++; break;  // вниз
+            case 3: newHead.x--; break;  // влево
         }
+
+        // если ударяется об рамку, то игра завершается
+        if (newHead.x < 0 || newHead.x >= width || newHead.y < 0 || newHead.y >= height)
+        {
+            snake.isAlive = false;
+            continue;  // пропускаем дальнейшую обработку этой змейки
+        }
+
+        // если ударяется об себя, то она "умирает"
+        for (auto iter = snake.body.begin(); iter !=snake.body.end(); ++iter)
+        {
+            if (iter->x == newHead.x && iter->y == newHead.y)
+            {
+                snake.isAlive = false;  // умирает только эта змейка   
+                break;        
+            }
+        }
+
+        if (!snake.isAlive) 
+        {
+            continue;  // пропускаем мертвых
+        }
+
+        
+        //3. добавляем новую голову
+        snake.body.push_front(newHead);
+        
+        //4. проверяем, съела ли змейка кролика (только у живых кроликов)
+        bool ateRabbit = false;
+
+        // & чтобы можно было менять значение переменной
+        // для каждого элемента rabbit в контейнере (список) rabbits
+        for (auto& rabbit : rabbits) 
+        {  
+            if (rabbit.isAlive && rabbit.pos.x == newHead.x && rabbit.pos.y == newHead.y) 
+            {
+                rabbit.isAlive = false; // кролик становится невидимым
+                ateRabbit = true;
+                break;
+            }
+        }
+        
+        // 5. если не съела - удаляем хвост, иначе - оставляем (змейка растет)
+        if (!ateRabbit) 
+        {
+            snake.body.pop_back();
+        }
+        else 
+        {
+            // Создаем нового живого кролика
+            rabbits.push_back(Rabbit(rand() % width, rand() % height));
+        }
+        /*
+        auto - Компилятор сам определяет тип переменной. Вместо длинного std::list<Position>::iterator
+        rabbits - список ВСЕХ кроликов, и при увеличении итератора, мы переходим к след кролику, у кот свои координаты (x, y)
+        */
     }
-    
-    // 5. Если не съела - удаляем хвост, иначе - оставляем (змейка растет)
-    if (!ateRabbit) 
-    {
-        snake.pop_back();
-    }
-    else 
-    {
-        // Создаем нового живого кролика
-        rabbits.push_back(Rabbit(rand() % width, rand() % height));
-    }
-    /*
-    auto - Компилятор сам определяет тип переменной. Вместо длинного std::list<Position>::iterator
-    rabbits - список ВСЕХ кроликов, и при увеличении итератора, мы переходим к след кролику, у кот свои координаты (x, y)
-    */
-    
 }
 
 
 // просто возвращаем данные
-const std::list<Position>& Model::getSnake() const 
+const std::vector<Snake>& Model::getSnakes() const 
 {
-    return snake;
+    return snakes;
 }
 
 const std::list<Rabbit>& Model::getRabbits() const 
@@ -139,17 +148,17 @@ int Model::getHeight() const
     return height;
 }
 
-void Model::setDirection(int dir) 
+void Model::setDirection(int id_snake, int dir) 
 {
-    direction = dir;
+    snakes[id_snake].direction = dir;
 }
 
-int Model::getDirection() const 
+int Model::getDirection(int id_snake) const 
 { 
-    return direction; 
+    return snakes[id_snake].direction; 
 }
 
-bool Model::isGameOver()
+bool Model::isGameOver() const
 {
     return gameOver;
 }

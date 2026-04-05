@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <termios.h>    //структура, хранящая настройки терминала (скорость, режимы ввода, и т.д.)
+#include <sys/time.h>
 
 // произвольные уникальные коды, которые мы сами придумали для обозначения стрелок, 
 // чтобы они не совпадали с реальными кодами клавиш (0-255 для обычных клавиш)
@@ -153,8 +154,6 @@ void View::render(const Model& model)
     
     int width = model.getWidth();
     int height = model.getHeight();
-
-    clearScreen();
     
     // Рамка
     for (int y = 0; y <= height + 1; y++) 
@@ -193,31 +192,42 @@ void View::render(const Model& model)
     
 
     // Змейка
-    const auto& snake = model.getSnake();
-    bool first = true;
-    
-    for (const auto& segment : snake) 
+    int id_snake = 0;
+    for (auto& snake : model.getSnakes())
     {
-        int x = segment.x + 1;
-        int y = segment.y + 1;
-        
-        if (first) 
-        {
-            int dir = model.getDirection();
-            switch(dir) 
-            {
-                case 0: buffer[(y * (width + 3)) + x] = '^'; break;
-                case 1: buffer[(y * (width + 3)) + x] = '>'; break;
-                case 2: buffer[(y * (width + 3)) + x] = 'v'; break;
-                case 3: buffer[(y * (width + 3)) + x] = '<'; break;
-            }
 
-            first = false;
-        } 
-        else 
+        if (!snake.isAlive) 
         {
-            buffer[(y * (width + 3)) + x] = 'o';
+            continue;
         }
+        
+        bool first = true;        
+        
+        for (const auto& segment : snake.body) 
+        {
+            int x = segment.x + 1;
+            int y = segment.y + 1;
+            
+            if (first) 
+            {
+                int dir = model.getDirection(id_snake);
+                switch(dir) 
+                {
+                    case 0: buffer[(y * (width + 3)) + x] = '^'; break;
+                    case 1: buffer[(y * (width + 3)) + x] = '>'; break;
+                    case 2: buffer[(y * (width + 3)) + x] = 'v'; break;
+                    case 3: buffer[(y * (width + 3)) + x] = '<'; break;
+                }
+
+                first = false;
+            } 
+            else 
+            {
+                buffer[(y * (width + 3)) + x] = 'o';
+            }
+        }
+
+        id_snake++;
     }
 
     
@@ -225,7 +235,7 @@ void View::render(const Model& model)
     std::cout << buffer;
 
     // очищаем всё, что ниже рамки
-    std::cout << "\033[J";  // очистить от курсора до конца экран
+    std::cout << "\033[J";  // очистить от курсора до конца экрана
     std::cout.flush();
 }
 
@@ -287,6 +297,8 @@ void View::showGameOver()
     resetColor();
 
     std::cout << "please press q/Q\n";
+    std::cout.flush();   // сразу на экран
+    
 
 }
 

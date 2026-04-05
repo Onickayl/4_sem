@@ -10,7 +10,7 @@ private:
     Model& model;      // ссылка на модель
     View& view;        // ссылка на представление
     bool running;      // флаг работы игры
-    int speed;         // скорость (задержка в мс)
+    int speed;         // скорость (задержка в мкс)
     
 public:
     Controller(Model& m, View& v);

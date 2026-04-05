@@ -19,16 +19,16 @@ void Controller::run()
             
             switch(key) 
             {
-                case KEY_UP:    model.setDirection(0); break;
-                case KEY_RIGHT: model.setDirection(1); break;
-                case KEY_DOWN:  model.setDirection(2); break;
-                case KEY_LEFT:  model.setDirection(3); break;
+                case KEY_UP:    model.setDirection(0, 0); break;
+                case KEY_RIGHT: model.setDirection(0, 1); break;
+                case KEY_DOWN:  model.setDirection(0, 2); break;
+                case KEY_LEFT:  model.setDirection(0, 3); break;
 
-                case 'w': case 'W': model.setDirection(0); break;
-                case 'd': case 'D': model.setDirection(1); break;
-                case 's': case 'S': model.setDirection(2); break;
-                case 'a': case 'A': model.setDirection(3); break;
-                case 'q': case 'Q': running = false; break;
+                case 'w': case 'W': model.setDirection(1, 0); break;
+                case 'd': case 'D': model.setDirection(1, 1); break;
+                case 's': case 'S': model.setDirection(1, 2); break;
+                case 'a': case 'A': model.setDirection(1, 3); break;
+                case 'q': case 'Q': running = false; return;
                 case 'p': case 'P': 
                     {
                         while (!view.keyPressed()) // пока нет нажатой клавы, ждём
@@ -43,6 +43,7 @@ void Controller::run()
         }
         
         model.update();         // обновляем состояние игры
+        
         // проверка
         if (model.isGameOver())
         {
@@ -64,6 +65,7 @@ void Controller::run()
             }
 
             running = false;
+            break;
         }
         view.render(model);     // рисуем новый кадр
         usleep(speed);          // ждём

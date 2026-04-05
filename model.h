@@ -25,9 +25,9 @@ struct Snake
     std::list<Position> body;       // список позиций сегментов змейки
     bool isAlive;                   // флаг только для змеек
     int direction;                  // 0=вверх, 1=вправо, 2=вниз, 3=влево
-    //int color;                      // цвет змейки 
+    int color;                      // цвет змейки 
     
-    Snake(int x, int y) : isAlive(true), direction(1) 
+    Snake(int x, int y) : isAlive(true), direction(1), color(32) 
     {
         // Создаем змейку из 3 сегментов
         body.push_back(Position(x, y));         // голова

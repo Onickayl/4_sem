@@ -9,8 +9,7 @@ class View
 private:
     std::string buffer;  // буфер для устранения мигания
     // Рисуем в память (в строку buffer) — это быстро и незаметно. Выводим всё сразу одним куском
-    //int width;
-    //int height;
+    std::vector<int> colorBuffer;  // ← новый буфер для цветов
     
     // ANSI escape последовательности
     void clearScreen();

@@ -5,7 +5,7 @@
 
 
 // Конструктор
-Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false)  //direction(1)
+Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false)
 {
     // инициализируем генератор случайных чисел
     static bool seeded = false;
@@ -31,7 +31,7 @@ Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false
     }
     
     // Добавляем 3 кролика
-    for (int i = 0; i < 3; i++) 
+    for (int i = 0; i < num_Snakes*2; i++) 
     {
         rabbits.push_back(Rabbit(rand() % width, rand() % height)); // случайное число от 0 до width-1 и случайное число от 0 до height-1
     }
@@ -47,8 +47,10 @@ void Model::update()
         return;
     }
 
-    for(auto& snake : snakes)
+    for(int i = 0; i < snakes.size(); i++)
     {
+        Snake& snake = snakes[i];
+
         if (!snake.isAlive) 
         {
             continue;  // пропускаем мертвых
@@ -68,14 +70,14 @@ void Model::update()
             case 3: newHead.x--; break;  // влево
         }
 
-        // если ударяется об рамку, то игра завершается
+// если ударяется об рамку, то игра завершается
         if (newHead.x < 0 || newHead.x >= width || newHead.y < 0 || newHead.y >= height)
         {
             snake.isAlive = false;
             continue;  // пропускаем дальнейшую обработку этой змейки
         }
 
-        // если ударяется об себя, то она "умирает"
+// если ударяется об себя, то она "умирает"
         for (auto iter = snake.body.begin(); iter !=snake.body.end(); ++iter)
         {
             if (iter->x == newHead.x && iter->y == newHead.y)
@@ -85,16 +87,36 @@ void Model::update()
             }
         }
 
-        if (!snake.isAlive) 
+// если стукается с другими змейками -> "умирает"
+        for(int j = 0; j < snakes.size(); j++)
+        {
+            if (j == i)
+            {
+                continue;
+            }
+            else
+            {
+                for (auto iter = snakes[j].body.begin(); iter !=snakes[j].body.end(); ++iter)
+                {
+                    if (iter->x == newHead.x && iter->y == newHead.y)
+                    {
+                        snake.isAlive = false;  // умирает только та змейка, что налетела   
+                        break;        
+                    }
+                }
+            }
+        }
+
+        if (!snakes[i].isAlive) 
         {
             continue;  // пропускаем мертвых
         }
 
         
-        //3. добавляем новую голову
+//3. добавляем новую голову
         snake.body.push_front(newHead);
         
-        //4. проверяем, съела ли змейка кролика (только у живых кроликов)
+//4. проверяем, съела ли змейка кролика (только у живых кроликов)
         bool ateRabbit = false;
 
         // & чтобы можно было менять значение переменной
@@ -124,6 +146,22 @@ void Model::update()
         rabbits - список ВСЕХ кроликов, и при увеличении итератора, мы переходим к след кролику, у кот свои координаты (x, y)
         */
     }
+
+    int count = 0;
+
+    for(auto& snake : snakes)
+    {
+        if(snake.isAlive)
+        {
+            count++;
+        }
+    }
+
+    if(count == 0)
+    {
+        gameOver = true;
+    }
+
 }
 
 

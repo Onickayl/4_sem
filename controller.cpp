@@ -19,15 +19,32 @@ void Controller::run()
             
             switch(key) 
             {
-                case KEY_UP:    model.setDirection(0, 0); break;
-                case KEY_RIGHT: model.setDirection(0, 1); break;
-                case KEY_DOWN:  model.setDirection(0, 2); break;
-                case KEY_LEFT:  model.setDirection(0, 3); break;
+                case KEY_UP:    
+                    if (model.getDirection(0) != 2) model.setDirection(0, 0);
+                    break;
+                case KEY_RIGHT:
+                    if (model.getDirection(0) != 3) model.setDirection(0, 1); 
+                    break; 
+                case KEY_DOWN:  
+                    if (model.getDirection(0) != 0) model.setDirection(0, 2);
+                    break;
+                case KEY_LEFT:  
+                    if (model.getDirection(0) != 1) model.setDirection(0, 3);
+                    break;
 
-                case 'w': case 'W': model.setDirection(1, 0); break;
-                case 'd': case 'D': model.setDirection(1, 1); break;
-                case 's': case 'S': model.setDirection(1, 2); break;
-                case 'a': case 'A': model.setDirection(1, 3); break;
+                case 'w': case 'W': 
+                    if (model.getDirection(1) != 2) model.setDirection(1, 0);
+                    break;
+                case 'd': case 'D':
+                    if (model.getDirection(1) != 3) model.setDirection(1, 1);
+                    break;
+                case 's': case 'S':
+                    if (model.getDirection(1) != 0) model.setDirection(1, 2);
+                    break;
+                case 'a': case 'A':
+                    if (model.getDirection(1) != 1) model.setDirection(1, 3);
+                    break;
+
                 case 'q': case 'Q': running = false; return;
                 case 'p': case 'P': 
                     {
@@ -43,7 +60,7 @@ void Controller::run()
         }
         
         model.update();         // обновляем состояние игры
-        
+
         // проверка
         if (model.isGameOver())
         {

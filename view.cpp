@@ -150,6 +150,7 @@ int View::getKey()
 
 void View::render(const Model& model) 
 {
+    colorBuffer.clear();
     buffer.clear();     //Очищаем строку-буфер
     
     int width = model.getWidth();
@@ -162,18 +163,22 @@ void View::render(const Model& model)
         {
             if (y == 0 || y == height + 1) 
             {
+                colorBuffer.push_back(WHITE);
                 buffer += "-";
             } 
             else if (x == 0 || x == width + 1) 
             {
+                colorBuffer.push_back(WHITE);
                 buffer += "|";
             } 
             else 
             {
+                colorBuffer.push_back(WHITE);
                 buffer += " ";      // внутри поля
             }
         }
 
+        colorBuffer.push_back(WHITE);
         buffer += "\n";     // конец строки
     }
     
@@ -186,10 +191,11 @@ void View::render(const Model& model)
             int x = rabbit.pos.x + 1;
             int y = rabbit.pos.y + 1;
 
-            buffer[(y * (width + 3)) + x] = 'X';
+            int pos = (y * (width + 3)) + x;
+            buffer[pos] = 'X';
+            colorBuffer[pos] = RED;  // меняем цвет на этой позиции
         }
     }
-    
 
     // Змейка
     int id_snake = 0;
@@ -198,6 +204,7 @@ void View::render(const Model& model)
 
         if (!snake.isAlive) 
         {
+            id_snake++;
             continue;
         }
         
@@ -207,23 +214,27 @@ void View::render(const Model& model)
         {
             int x = segment.x + 1;
             int y = segment.y + 1;
+
+            int pos = (y * (width + 3)) + x;
             
             if (first) 
             {
                 int dir = model.getDirection(id_snake);
+                colorBuffer[pos] = snake.color;
                 switch(dir) 
                 {
-                    case 0: buffer[(y * (width + 3)) + x] = '^'; break;
-                    case 1: buffer[(y * (width + 3)) + x] = '>'; break;
-                    case 2: buffer[(y * (width + 3)) + x] = 'v'; break;
-                    case 3: buffer[(y * (width + 3)) + x] = '<'; break;
+                    case 0: buffer[pos] = '^'; break;
+                    case 1: buffer[pos] = '>'; break;
+                    case 2: buffer[pos] = 'v'; break;
+                    case 3: buffer[pos] = '<'; break;
                 }
 
                 first = false;
             } 
             else 
             {
-                buffer[(y * (width + 3)) + x] = 'o';
+                colorBuffer[pos] = snake.color;
+                buffer[pos] = 'o';
             }
         }
 
@@ -232,7 +243,16 @@ void View::render(const Model& model)
 
     
     gotoxy(0, 0);
-    std::cout << buffer;
+
+// выводим цветной буфер
+    for (int i = 0; i < buffer.size(); i++) 
+    {
+        setColor(colorBuffer[i]);
+        std::cout << buffer[i];
+    }
+    
+    resetColor();
+
 
     // очищаем всё, что ниже рамки
     std::cout << "\033[J";  // очистить от курсора до конца экрана

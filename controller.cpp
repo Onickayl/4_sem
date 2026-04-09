@@ -7,7 +7,7 @@
 #define KEY_RIGHT 1002
 #define KEY_LEFT  1003
 
-Controller::Controller(Model& m, View& v) : model(m), view(v), running(true), speed(400000) {}
+Controller::Controller(Model& m, View& v) : model(m), view(v), running(true), speed(100000) {}
 
 void Controller::run() 
 {

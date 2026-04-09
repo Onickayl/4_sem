@@ -28,14 +28,25 @@ Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false
         snakes.push_back(Snake(startX, startY));
     }
 
+    int num_bot = 0;
+
     // тупой бот
     Snake dumb(5, 5);
-    dumb.isBot = true;
+    dumb.bot_type = 1;
     dumb.color = 36;
     snakes.push_back(dumb);
+    num_bot++;
 
-    // Добавляем 3 кролика
-    for (int i = 0; i < num_Snakes * 2; i++)
+    // осторожный бот
+    Snake careful(5, height - 5);
+    careful.bot_type = 2;
+    careful.color = 33;
+    snakes.push_back(careful);
+    num_bot++;
+
+
+    // Добавляем кроликов
+    for (int i = 0; i < (num_Snakes + num_bot) * 2; i++)
     {
         rabbits.push_back(Rabbit(rand() % width, rand() % height)); // случайное число от 0 до width-1 и случайное число от 0 до height-1
     }
@@ -61,13 +72,44 @@ void Model::update()
 // 1. получаем голову (front() - первый элемент)
         Position head = snake.body.front();
 
-        if (snake.isBot) 
+        if (snake.bot_type == 1) 
         {
             bot_dir(snake, head);            
         }
+        else if (snake.bot_type == 2)
+        {
+            int old_dir = snake.direction;
+            bot_dir(snake, head);
+            int dir = snake.direction;
 
+            // Список направлений для проверки
+            int directions[4] = {   dir,                     // желаемое
+                                    (dir + 3) % 4,           // налево от желаемого
+                                    (dir + 1) % 4,           // направо от желаемого
+                                    old_dir                  // до bot_dir (если всё плохо)
+                                };
 
-        // 2. вычисляем новую позицию головы
+            // перебираем и выбираем первое безопасное
+            bool found = false;
+
+            for (int d : directions)
+            {
+                if (is_safe(head, i, snakes, width, height, d))
+                {
+                    snake.direction = d;
+                    found = true;
+                    break;
+                }
+            }
+
+            // если ничего не безопасно — оставляем текущее (которое было до bot_dir)
+            if (!found)
+            {
+                snake.direction = old_dir;
+            }
+        }
+
+// 2. вычисляем новую позицию головы
         Position newHead = head;
 
         switch (snake.direction)
@@ -145,6 +187,7 @@ void Model::update()
     }
 }
 
+// БОТ
 void Model::bot_dir(Snake &snake, Position head)
 {
     int min = 999999;
@@ -200,6 +243,8 @@ void Model::bot_dir(Snake &snake, Position head)
     snake.direction = newDir;
 }
 
+
+// Проверки
 bool Model::check_wall(Position newHead, int width, int height)
 {
     if (newHead.x < 0 || newHead.x >= width || newHead.y < 0 || newHead.y >= height)
@@ -210,7 +255,7 @@ bool Model::check_wall(Position newHead, int width, int height)
     return false;
 }
 
-bool Model::check_self(Snake snake, Position newHead)
+bool Model::check_self(Snake &snake, Position newHead)
 {
     for (auto iter = snake.body.begin(); iter != snake.body.end(); ++iter)
     {
@@ -257,6 +302,34 @@ bool Model::eat_rabbit(Position newHead, std::list<Rabbit> &rabbits)
             rabbit.isAlive = false;
             return true;
         }
+    }
+
+    return false;
+}
+
+bool Model::is_safe(Position head, int index, std::vector<Snake> &snakes, int width, int height, int dir)
+{
+    Position newHead = head;
+
+    switch (dir)
+    {
+        case 0:
+            newHead.y--;
+            break; // вверх
+        case 1:
+            newHead.x++;
+            break; // вправо
+        case 2:
+            newHead.y++;
+            break; // вниз
+        case 3:
+            newHead.x--;
+            break; // влево
+    }
+
+    if (!check_wall(newHead, width, height) && !check_self(snakes[index], newHead) && !check_other(snakes, index, newHead))
+    {
+        return true;
     }
 
     return false;

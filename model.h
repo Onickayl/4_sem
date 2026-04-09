@@ -26,8 +26,9 @@ struct Snake
     bool isAlive;                   // флаг только для змеек
     int direction;                  // 0=вверх, 1=вправо, 2=вниз, 3=влево
     int color;                      // цвет змейки 
+    bool isBot;                     // бот ли
     
-    Snake(int x, int y) : isAlive(true), direction(1), color(32) 
+    Snake(int x, int y) : isAlive(true), direction(1), color(32), isBot(false)
     {
         // Создаем змейку из 3 сегментов
         body.push_back(Position(x, y));         // голова
@@ -63,10 +64,17 @@ public:
     
     // Обновление состояния (один шаг игры)
     void update();
+
+    // проверки
+    bool check_wall(Position newHead, int width, int height);
+    bool check_self(Snake snake, Position newHead);
+    bool check_other(std::vector<Snake> &snakes, int index, Position newHead);
+    bool eat_rabbit(Position newHead, std::list<Rabbit> &rabbits);
     
     // Изменение направления
     void setDirection(int id_snake, int dir); 
     int getDirection(int id_snake) const;
+    void bot_dir(Snake &snake, Position head);
     
     // Геттеры (методы для получения данных)
     const std::vector<Snake>& getSnakes() const;

@@ -2,6 +2,7 @@
 #include <cstdlib> // для rand(), srand()
 #include <ctime>   // для time()
 
+
 // Конструктор
 Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false)
 {
@@ -272,18 +273,16 @@ bool Model::check_other(std::vector<Snake> &snakes, int index, Position newHead)
 {
     for (int j = 0; j < snakes.size(); j++)
     {
-        if (j == index)
+        if (j == index || !snakes[j].isAlive)
         {
             continue;
         }
-        else
+
+        for (auto iter = snakes[j].body.begin(); iter != snakes[j].body.end(); ++iter)
         {
-            for (auto iter = snakes[j].body.begin(); iter != snakes[j].body.end(); ++iter)
+            if (iter->x == newHead.x && iter->y == newHead.y)
             {
-                if (iter->x == newHead.x && iter->y == newHead.y)
-                {
-                    return true;
-                }
+                return true;
             }
         }
     }

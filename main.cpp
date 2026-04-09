@@ -11,7 +11,7 @@ int main()
 {
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
-    int num_Snakes = 1;
+    int num_Snakes = 2;
 
     // Создаем поле на весь терминал
     Model model(w.ws_col - 2, w.ws_row - 3, num_Snakes);

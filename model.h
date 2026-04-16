@@ -76,10 +76,15 @@ public:
     void setDirection(int id_snake, int dir); 
     int getDirection(int id_snake) const;
     void bot_dir(Snake &snake, Position head);
+
+    // smart bot
+    //void smart_bot(Position head, int index, std::vector<Snake> &snakes, int width, int height);
     
     // Геттеры (методы для получения данных)
     const std::vector<Snake>& getSnakes() const;
     const std::list<Rabbit>& getRabbits() const;
+    std::vector<Snake>& getSnakes() { return snakes; }
+    std::list<Rabbit>& getRabbits() { return rabbits; }
     int getWidth() const;
     int getHeight() const;
     bool isGameOver() const;

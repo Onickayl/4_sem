@@ -24,7 +24,6 @@ public:
     ~View();    // деструктор — вызывается при уничтожении объекта (вернет курсор обратно)
     
     // Отрисовка всего
-    void showRules();
     void render(const Model& model);
     void showGameOver();
     

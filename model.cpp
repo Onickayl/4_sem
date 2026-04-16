@@ -45,6 +45,13 @@ Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false
     snakes.push_back(careful);
     num_bot++;
 
+    // умный бот 1
+    Snake smart(width - 5, height - 5);
+    smart.bot_type = 3;
+    smart.color = 35;
+    snakes.push_back(smart);
+    num_bot++;
+
 
     // Добавляем кроликов
     for (int i = 0; i < (num_Snakes + num_bot) * 2; i++)
@@ -244,6 +251,15 @@ void Model::bot_dir(Snake &snake, Position head)
     snake.direction = newDir;
 }
 
+/*void Model::smart_bot(Position head, int index, std::vector<Snake> &snakes, int width, int height)
+{
+/*
+надо массив? направлений, т.е. мы как будто замираем, а потом смотрим все направления к кучке? кроликов 
+и выбираем кратчайший безопасный путь
+
+    int *directions;
+
+}*/
 
 // Проверки
 bool Model::check_wall(Position newHead, int width, int height)

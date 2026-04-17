@@ -4,12 +4,14 @@
 
 // используем уникальные коды, не пересекающиеся с буквами
 #define KEY_UP    1000
-#define KEY_DOWN  1001
+#define KEY_DOWN 1001
 #define KEY_RIGHT 1002
-#define KEY_LEFT  1003
+#define KEY_LEFT 1003
 
-Controller::Controller(Model* m, View& v, int num) : model(m), view(v), running(true), speed(20000), num_snakes(num) {}
-Controller::~Controller() 
+Controller::Controller(Model *m, View &v, int snake_speed, int num, bool bots)
+    : model(m), view(v), running(true), speed(snake_speed), num_snakes(num), bots_enabled(bots) {}
+
+Controller::~Controller()
 {
     delete model;
 }
@@ -22,101 +24,134 @@ void Controller::run()
 
     while (running)
     {
-        struct winsize new_size;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_size);
-
-        if (new_size.ws_col != old_size.ws_col || new_size.ws_row != old_size.ws_row)
+        if (bots_enabled == 0)
         {
-            resize_game(new_size.ws_col - 2, new_size.ws_row - 3);
-            old_size = new_size;
-        }
+            // ручной режим
 
-        if (view.keyPressed())
-        {
-            int key = view.getKey();
+            struct winsize new_size;
+            ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_size);
 
-            switch(key) 
+            if (new_size.ws_col != old_size.ws_col || new_size.ws_row != old_size.ws_row)
             {
-                case KEY_UP:    
-                    if (model->getDirection(0) != 2) model->setDirection(0, 0);
+                resize_game(new_size.ws_col - 2, new_size.ws_row - 3);
+                old_size = new_size;
+            }
+
+            if (view.keyPressed())
+            {
+                int key = view.getKey();
+
+                switch (key)
+                {
+                case KEY_UP:
+                    if (model->getDirection(0) != 2)
+                        model->setDirection(0, 0);
                     break;
                 case KEY_RIGHT:
-                    if (model->getDirection(0) != 3) model->setDirection(0, 1); 
-                    break; 
-                case KEY_DOWN:  
-                    if (model->getDirection(0) != 0) model->setDirection(0, 2);
+                    if (model->getDirection(0) != 3)
+                        model->setDirection(0, 1);
                     break;
-                case KEY_LEFT:  
-                    if (model->getDirection(0) != 1) model->setDirection(0, 3);
+                case KEY_DOWN:
+                    if (model->getDirection(0) != 0)
+                        model->setDirection(0, 2);
                     break;
-
-                case 'w': case 'W': 
-                    if (model->getDirection(1) != 2) model->setDirection(1, 0);
-                    break;
-                case 'd': case 'D':
-                    if (model->getDirection(1) != 3) model->setDirection(1, 1);
-                    break;
-                case 's': case 'S':
-                    if (model->getDirection(1) != 0) model->setDirection(1, 2);
-                    break;
-                case 'a': case 'A':
-                    if (model->getDirection(1) != 1) model->setDirection(1, 3);
+                case KEY_LEFT:
+                    if (model->getDirection(0) != 1)
+                        model->setDirection(0, 3);
                     break;
 
-                case 'q': case 'Q': running = false; return;
-                case 'p': case 'P': 
-                    {
-                        while (!view.keyPressed()) // пока нет нажатой клавы, ждём
-                        {
-                            usleep(100000);
-                        }
+                case 'w':
+                case 'W':
+                    if (model->getDirection(1) != 2)
+                        model->setDirection(1, 0);
+                    break;
+                case 'd':
+                case 'D':
+                    if (model->getDirection(1) != 3)
+                        model->setDirection(1, 1);
+                    break;
+                case 's':
+                case 'S':
+                    if (model->getDirection(1) != 0)
+                        model->setDirection(1, 2);
+                    break;
+                case 'a':
+                case 'A':
+                    if (model->getDirection(1) != 1)
+                        model->setDirection(1, 3);
+                    break;
 
-                        view.getKey();
-                        break;
-                    }
-            }
-        }
-
-        model->update();         // обновляем состояние игры
-
-        // проверка
-        if (model->isGameOver())
-        {
-            view.showGameOver();
-
-            while (true) 
-            {
-                if(view.keyPressed())
+                case 'q':
+                case 'Q':
+                    running = false;
+                    return;
+                case 'p':
+                case 'P':
                 {
-                    int key = view.getKey();
-                    
-                    if (key == 'q' || key == 'Q')
+                    while (!view.keyPressed()) // пока нет нажатой клавы, ждём
                     {
-                        break;
+                        usleep(100000);
                     }
+
+                    view.getKey();
+                    break;
+                }
+                }
+            }
+
+            model->update(); // обновляем состояние игры
+
+            // проверка
+            if (model->isGameOver())
+            {
+                view.showGameOver();
+
+                while (true)
+                {
+                    if (view.keyPressed())
+                    {
+                        int key = view.getKey();
+
+                        if (key == 'q' || key == 'Q')
+                        {
+                            break;
+                        }
+                    }
+
+                    usleep(100000);
                 }
 
-                usleep(100000);
+                running = false;
+                break;
             }
-
-            running = false;
-            break;
+            view.render(*model); // рисуем новый кадр
+            usleep(speed);       // ждём
         }
-        view.render(*model);     // рисуем новый кадр
-        usleep(speed);          // ждём
+        else
+        {
+            // в режиме прогонов — только update
+            model->update();
+
+            usleep(10000);  // небольшая задержка (10 мс)
+
+            if (model->isGameOver())
+            {
+                running = false;
+            }
+        }
     }
 }
 
 void Controller::resize_game(int new_width, int new_height)
 {
-// 1. Сохранить состояние
+// сохранить состояние
     std::vector<Snake> saved_snakes = model->getSnakes();
     std::list<Rabbit> saved_rabbits = model->getRabbits();
 
-// 2. Создать новую модель
+// создать новую модель
     Model *new_model = new Model(new_width, new_height, num_snakes);
 
-// 3. Перенести змеек
+// перенести змеек
     new_model->getSnakes().clear();
 
     for (const auto &old_snake : saved_snakes)
@@ -142,7 +177,7 @@ void Controller::resize_game(int new_width, int new_height)
         new_model->getSnakes().push_back(new_snake);
     }
 
-// 4. Перенести кроликов
+// перенести кроликов
     new_model->getRabbits().clear();
     for (const auto &rabbit : saved_rabbits)
     {
@@ -151,10 +186,10 @@ void Controller::resize_game(int new_width, int new_height)
         {
             new_model->getRabbits().push_back(rabbit);
         }
-        // Кролики за границей — просто теряются
+        // кролики за границей — просто теряются
     }
 
-// 5. Удалить старую модель и заменить новой
+// удалить старую модель и заменить новой
 
     delete model;
     

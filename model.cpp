@@ -4,7 +4,7 @@
 
 
 // Конструктор
-Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false)
+Model::Model(int w, int h, int num_Snakes, bool bots) : width(w), height(h), bots_enabled(bots),  gameOver(false)
 {
     // инициализируем генератор случайных чисел
     static bool seeded = false;
@@ -31,27 +31,29 @@ Model::Model(int w, int h, int num_Snakes) : width(w), height(h), gameOver(false
 
     int num_bot = 0;
 
-    // тупой бот
-    Snake dumb(5, 5);
-    dumb.bot_type = 1;
-    dumb.color = 36;
-    snakes.push_back(dumb);
-    num_bot++;
+    if (bots_enabled == 1)
+    {
+        // тупой бот
+        Snake dumb(5, 5);
+        dumb.bot_type = 1;
+        dumb.color = 36;
+        snakes.push_back(dumb);
+        num_bot++;
 
-    // осторожный бот
-    Snake careful(5, height - 5);
-    careful.bot_type = 2;
-    careful.color = 33;
-    snakes.push_back(careful);
-    num_bot++;
+        // осторожный бот
+        Snake careful(5, height - 5);
+        careful.bot_type = 2;
+        careful.color = 33;
+        snakes.push_back(careful);
+        num_bot++;
 
-    // умный бот 1
-    Snake smart(width - 5, height - 5);
-    smart.bot_type = 3;
-    smart.color = 35;
-    snakes.push_back(smart);
-    num_bot++;
-
+        // умный бот 1
+        Snake smart(width - 5, height - 5);
+        smart.bot_type = 3;
+        smart.color = 35;
+        snakes.push_back(smart);
+        num_bot++;
+    }
 
     // Добавляем кроликов
     for (int i = 0; i < (num_Snakes + num_bot) * 2; i++)
@@ -77,47 +79,52 @@ void Model::update()
             continue; // пропускаем мертвых
         }
 
-// 1. получаем голову (front() - первый элемент)
+        // 1. получаем голову (front() - первый элемент)
         Position head = snake.body.front();
 
-        if (snake.bot_type == 1) 
+        if (bots_enabled == 1)
         {
-            bot_dir(snake, head);            
-        }
-        else if (snake.bot_type == 2)
-        {
-            int old_dir = snake.direction;
-            bot_dir(snake, head);
-            int dir = snake.direction;
-
-            // Список направлений для проверки
-            int directions[4] = {   dir,                     // желаемое
-                                    (dir + 3) % 4,           // налево от желаемого
-                                    (dir + 1) % 4,           // направо от желаемого
-                                    old_dir                  // до bot_dir (если всё плохо)
-                                };
-
-            // перебираем и выбираем первое безопасное
-            bool found = false;
-
-            for (int d : directions)
+            if (snake.bot_type == 1)
             {
-                if (is_safe(head, i, snakes, width, height, d))
+                bot_dir(snake, head);
+            }
+            else if (snake.bot_type == 2)
+            {
+                int old_dir = snake.direction;
+                bot_dir(snake, head);
+                int dir = snake.direction;
+
+                // Список направлений для проверки
+                int directions[4] = 
                 {
-                    snake.direction = d;
-                    found = true;
-                    break;
+                    dir,           // желаемое
+                    (dir + 3) % 4, // налево от желаемого
+                    (dir + 1) % 4, // направо от желаемого
+                    old_dir        // до bot_dir (если всё плохо)
+                };
+
+                // перебираем и выбираем первое безопасное
+                bool found = false;
+
+                for (int d : directions)
+                {
+                    if (is_safe(head, i, snakes, width, height, d))
+                    {
+                        snake.direction = d;
+                        found = true;
+                        break;
+                    }
+                }
+
+                // если ничего не безопасно — оставляем текущее (которое было до bot_dir)
+                if (!found)
+                {
+                    snake.direction = old_dir;
                 }
             }
-
-            // если ничего не безопасно — оставляем текущее (которое было до bot_dir)
-            if (!found)
-            {
-                snake.direction = old_dir;
-            }
         }
 
-// 2. вычисляем новую позицию головы
+        // 2. вычисляем новую позицию головы
         Position newHead = head;
 
         switch (snake.direction)
@@ -179,18 +186,28 @@ void Model::update()
         */
     }
 
-    int count = 0;
 
-    for (auto &snake : snakes)
+
+    int count = 0;
+    int last_alive = -1;
+
+    for (int i = 0; i < snakes.size(); i++) 
     {
-        if (snake.isAlive)
+        if (snakes[i].isAlive) 
         {
             count++;
+            last_alive = i;
         }
     }
 
-    if (count == 0)
+    if (count == 1 && bots_enabled == true) 
     {
+        winner = last_alive;
+        gameOver = true;
+    } 
+    else if (count == 0) 
+    {
+        winner = -1;  // ничья (все умерли одновременно)
         gameOver = true;
     }
 }
@@ -379,6 +396,25 @@ void Model::setDirection(int id_snake, int dir)
 int Model::getDirection(int id_snake) const
 {
     return snakes[id_snake].direction;
+}
+
+int Model::getWinner() const
+{
+    int winner = -1;
+
+    for (int i = 0; i < snakes.size(); i++) 
+    {
+        if (snakes[i].isAlive) 
+        {
+            if (winner != -1) 
+            {
+                return -1;  // больше одного живого
+            }
+
+            winner = i;
+        }
+    }
+    return winner;
 }
 
 bool Model::isGameOver() const

@@ -12,9 +12,10 @@ private:
     bool running;      // флаг работы игры
     int speed;         // скорость (задержка в мкс)
     int num_snakes;    // кол-во змеек
+    bool bots_enabled; // боты включены
     
 public:
-    Controller(Model* m, View& v, int num);
+    Controller(Model* m, View& v, int snake_speed, int num, bool bots = false);
     ~Controller();
     
     void run();        // главный цикл игры

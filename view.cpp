@@ -20,33 +20,41 @@
 // original_tio сохраняет исходные настройки, чтобы мы могли их восстановить
 static struct termios original_tio;
 
-View::View() 
+View::View(bool silent_mode) : silent(silent_mode)
 {
-    struct termios new_tio;                     //копия исходных настроек, которую мы будем изменять для игры
+    if (!silent)
+    {
 
-    tcgetattr(STDIN_FILENO, &original_tio);     // функция, которая читает текущие настройки терминала и сохраняет их в структуру
+        struct termios new_tio; // копия исходных настроек, которую мы будем изменять для игры
 
-    new_tio = original_tio;
-    new_tio.c_lflag &= ~(ICANON | ECHO);        // Клавиши приходят сразу, не показываются 
-    // выключаем ICANON и ECHO, остальные флаги оставляем как были
-    // ICANON ждет Enter, можно редактировать строку. ECHO показывает нажатые клавиши на экране
-    new_tio.c_cc[VMIN] = 0;                     // не ждать, читать сразу, если есть символы
-    // c_cc — это массив управляющих символов. VMIN — это индекс в этом массиве, который задает минимальное количество символов для чтения.
-    new_tio.c_cc[VTIME] = 0;                    // без таймаута
-    // таймаут в десятых долях секунды
+        tcgetattr(STDIN_FILENO, &original_tio); // функция, которая читает текущие настройки терминала и сохраняет их в структуру
 
-    // Применяем новые настройки к терминалу
-    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
-    // TCSANOW - применить изменения немедленно
-    
-    hideCursor();
-    clearScreen();
+        new_tio = original_tio;
+        new_tio.c_lflag &= ~(ICANON | ECHO); // Клавиши приходят сразу, не показываются
+        // выключаем ICANON и ECHO, остальные флаги оставляем как были
+        // ICANON ждет Enter, можно редактировать строку. ECHO показывает нажатые клавиши на экране
+        new_tio.c_cc[VMIN] = 0; // не ждать, читать сразу, если есть символы
+        // c_cc — это массив управляющих символов. VMIN — это индекс в этом массиве, который задает минимальное количество символов для чтения.
+        new_tio.c_cc[VTIME] = 0; // без таймаута
+        // таймаут в десятых долях секунды
+
+        // Применяем новые настройки к терминалу
+        tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+        // TCSANOW - применить изменения немедленно
+
+        hideCursor();
+        clearScreen();
+    }
 }
+
 
 View::~View() 
 {
-    showCursor();
-    tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
+    if (!silent) 
+    {
+        showCursor();
+        tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
+    }
 }
 
 void View::clearScreen() 
@@ -150,6 +158,11 @@ int View::getKey()
 
 void View::render(const Model& model) 
 {
+    if (silent) 
+    {
+        return;
+    }
+
     colorBuffer.clear();
     buffer.clear();     //Очищаем строку-буфер
     
@@ -262,6 +275,11 @@ void View::render(const Model& model)
 
 void View::showGameOver()
 {
+    if (silent) 
+    {
+        return;
+    }
+
     clearScreen();
     
     setColor(RED);

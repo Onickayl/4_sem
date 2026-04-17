@@ -55,12 +55,14 @@ private:
 
     std::vector<Snake> snakes;           // вектор змеек
     std::list<Rabbit> rabbits;           // кролики
+    bool bots_enabled;                   // боты включены
+    int winner;                          // -1 если нет, иначе индекс
     bool gameOver;                       // флаг завершения игры
     
 public:
 
     // Конструктор (вызывается при создании объекта)
-    Model(int w, int h, int num_Snakes = 1);
+    Model(int w, int h, int num_Snakes = 1, bool bots = false);
     
     // Обновление состояния (один шаг игры)
     void update();
@@ -87,6 +89,7 @@ public:
     std::list<Rabbit>& getRabbits() { return rabbits; }
     int getWidth() const;
     int getHeight() const;
+    int getWinner() const;
     bool isGameOver() const;
     // const в конце означает - "этот метод НЕ изменяет объект"
     // std::list<Position>& аналогично List* getSnake()

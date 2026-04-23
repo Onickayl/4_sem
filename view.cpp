@@ -15,6 +15,8 @@
 #define GREEN   32
 #define YELLOW  33
 #define WHITE   37
+#define GOLD    93
+#define BLUE    34
 
 // статическая переменная, которая хранит исходные настройки терминала
 // original_tio сохраняет исходные настройки, чтобы мы могли их восстановить
@@ -156,6 +158,7 @@ int View::getKey()
     return ch;      // если первый символ не ESC, это обычная клавиша — возвращаем её код
 }
 
+
 void View::render(const Model& model) 
 {
     if (silent) 
@@ -164,12 +167,12 @@ void View::render(const Model& model)
     }
 
     colorBuffer.clear();
-    buffer.clear();     //Очищаем строку-буфер
+    buffer.clear();     // Очищаем строку-буфер
     
     int width = model.getWidth();
     int height = model.getHeight();
     
-    // Рамка
+// Рамка
     for (int y = 0; y <= height + 1; y++) 
     {
         for (int x = 0; x <= width + 1; x++) 
@@ -177,12 +180,12 @@ void View::render(const Model& model)
             if (y == 0 || y == height + 1) 
             {
                 colorBuffer.push_back(WHITE);
-                buffer += "-";
+                buffer += "#";
             } 
             else if (x == 0 || x == width + 1) 
             {
                 colorBuffer.push_back(WHITE);
-                buffer += "|";
+                buffer += "#";
             } 
             else 
             {
@@ -194,9 +197,9 @@ void View::render(const Model& model)
         colorBuffer.push_back(WHITE);
         buffer += "\n";     // конец строки
     }
-    
 
-    // Кролики
+
+// Кролики
     for (const auto& rabbit : model.getRabbits()) 
     {
         if (rabbit.isAlive) 
@@ -210,7 +213,37 @@ void View::render(const Model& model)
         }
     }
 
-    // Змейка
+// Яблоки
+
+    for (const auto& apple : model.getApples()) 
+    {
+        if (apple.isAlive)
+        {
+            int x = apple.pos.x + 1;
+            int y = apple.pos.y + 1;
+
+            int pos = (y * (width + 3)) + x;
+            buffer[pos] = '@';
+            colorBuffer[pos] = GOLD;  // меняем цвет на этой позиции
+        }
+    }
+
+// Снежинки
+
+    for (const auto& snowflake : model.getSnowflakes()) 
+    {
+        if (snowflake.isAlive)
+        {
+            int x = snowflake.pos.x + 1;
+            int y = snowflake.pos.y + 1;
+
+            int pos = (y * (width + 3)) + x;
+            buffer[pos] = '*';
+            colorBuffer[pos] = BLUE;  // меняем цвет на этой позиции
+        }
+    }
+
+// Змейка
     int id_snake = 0;
     for (auto& snake : model.getSnakes())
     {
@@ -264,6 +297,23 @@ void View::render(const Model& model)
         std::cout << buffer[i];
     }
     
+// статус
+    gotoxy(0, height + 3);
+    setColor(RED);
+    std::cout << "X ";
+    setColor(WHITE);
+    std::cout << "(+1) = " << model.getEaten_rabbits() << "     ";
+    setColor(GOLD);
+    std::cout << "@ ";
+    setColor(WHITE);
+    std::cout << "(+3) = " << model.getEaten_apples() << "      ";
+    setColor(BLUE);
+    std::cout << "* ";
+    setColor(WHITE);
+    std::cout << "(-5) = " << model.getEaten_snowflakes() << std::endl;
+    resetColor();
+
+
     resetColor();
 
 

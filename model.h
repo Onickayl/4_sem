@@ -27,8 +27,9 @@ struct Snake
     int direction;                  // 0=вверх, 1=вправо, 2=вниз, 3=влево
     int color;                      // цвет змейки 
     int bot_type;                   // 0 - не бот 1 - тупой 2 - осторожный
+    int grow;                       // счётчик роста
     
-    Snake(int x, int y) : isAlive(true), direction(1), color(32), bot_type(0)
+    Snake(int x, int y) : isAlive(true), direction(1), color(32), bot_type(0), grow(0)
     {
         // Создаем змейку из 3 сегментов
         body.push_back(Position(x, y));         // голова
@@ -47,6 +48,25 @@ struct Rabbit
 };
 
 
+// Яблоко с дополнительными свойствами
+struct Apple
+{
+    Position pos;
+    bool isAlive;  // флаг только для яблок
+    
+    Apple(int x, int y) : pos(x, y), isAlive(true) {}
+};
+
+// Снежинка с дополнительными свойствами
+struct Snowflake
+{
+    Position pos;
+    bool isAlive;  // флаг только для снежинок
+    
+    Snowflake(int x, int y) : pos(x, y), isAlive(true) {}
+};
+
+
 class Model 
 {
 private:
@@ -55,10 +75,15 @@ private:
 
     std::vector<Snake> snakes;           // вектор змеек
     std::list<Rabbit> rabbits;           // кролики
+    std::list<Apple> apples;             // яблоки
+    std::list<Snowflake> snowflakes;     // снежинки
     bool bots_enabled;                   // боты включены
     int winner;                          // -1 если нет, иначе индекс
     bool gameOver;                       // флаг завершения игры
-    
+    int eaten_rabbits;                   // кол-во съеденных кроликов
+    int eaten_apples;
+    int eaten_snowflakes;
+
 public:
 
     // Конструктор (вызывается при создании объекта)
@@ -72,6 +97,8 @@ public:
     bool check_self(Snake &snake, Position newHead);
     bool check_other(std::vector<Snake> &snakes, int index, Position newHead);
     bool eat_rabbit(Position newHead, std::list<Rabbit> &rabbits);
+    bool eat_apple(Position newHead, std::list<Apple> &apples);
+    bool eat_snowflake(Position newHead, std::list<Snowflake> &snowflakes);
     bool is_safe(Position head, int index, std::vector<Snake> &snakes, int width, int height, int dir);
     
     // Изменение направления
@@ -85,8 +112,17 @@ public:
     // Геттеры (методы для получения данных)
     const std::vector<Snake>& getSnakes() const;
     const std::list<Rabbit>& getRabbits() const;
+    const std::list<Apple>& getApples() const;
+    const std::list<Snowflake>& getSnowflakes() const;
+    
+    int getEaten_rabbits() const { return eaten_rabbits; }
+    int getEaten_apples() const { return eaten_apples; }
+    int getEaten_snowflakes() const { return eaten_snowflakes; }
+
     std::vector<Snake>& getSnakes() { return snakes; }
-    std::list<Rabbit>& getRabbits() { return rabbits; }
+    std::list<Rabbit>& getRabbits() { return rabbits;}
+    std::list<Apple>& getApples()   { return apples; }
+    
     int getWidth() const;
     int getHeight() const;
     int getWinner() const;

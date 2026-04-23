@@ -7,7 +7,7 @@
 class Controller 
 {
 private:
-    Model* model;      // ссылка на модель
+    Model* model;      // указатель на модель
     View& view;        // ссылка на представление
     bool running;      // флаг работы игры
     int speed;         // скорость (задержка в мкс)

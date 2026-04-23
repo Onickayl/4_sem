@@ -4,9 +4,9 @@
 
 // используем уникальные коды, не пересекающиеся с буквами
 #define KEY_UP    1000
-#define KEY_DOWN 1001
+#define KEY_DOWN  1001
 #define KEY_RIGHT 1002
-#define KEY_LEFT 1003
+#define KEY_LEFT  1003
 
 Controller::Controller(Model *m, View &v, int snake_speed, int num, bool bots)
     : model(m), view(v), running(true), speed(snake_speed), num_snakes(num), bots_enabled(bots) {}
@@ -33,7 +33,7 @@ void Controller::run()
 
             if (new_size.ws_col != old_size.ws_col || new_size.ws_row != old_size.ws_row)
             {
-                resize_game(new_size.ws_col - 2, new_size.ws_row - 3);
+                resize_game(new_size.ws_col - 2, new_size.ws_row - 4 );
                 old_size = new_size;
             }
 
@@ -147,6 +147,7 @@ void Controller::resize_game(int new_width, int new_height)
 // сохранить состояние
     std::vector<Snake> saved_snakes = model->getSnakes();
     std::list<Rabbit> saved_rabbits = model->getRabbits();
+    //std::list<Apple> saved_apples = model->getApples();
 
 // создать новую модель
     Model *new_model = new Model(new_width, new_height, num_snakes);
@@ -188,6 +189,20 @@ void Controller::resize_game(int new_width, int new_height)
         }
         // кролики за границей — просто теряются
     }
+    
+// перенести яблоки
+/*
+    new_model->getApples().clear();
+    for (const auto &apple : saved_apples)
+    {
+        if (apple.pos.x >= 0 && apple.pos.x < new_width &&
+            apple.pos.y >= 0 && apple.pos.y < new_height)
+        {
+            new_model->getApples().push_back(apple);
+        }
+        // яблоки за границей — просто теряются
+    }*/
+
 
 // удалить старую модель и заменить новой
 

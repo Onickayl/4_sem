@@ -11,26 +11,6 @@ struct winsize w;
 void manual();
 void test(int runs);
 
-/*
-
-В игре есть бонусы в виде магических атрибутов, которые появляются на поле. 
-
-самая простая реализация - без рандома по времени
-может если съели 5 кроликов какой-то атрибут появляется
-
-- магические атрибуты
-    - жёлтое яблоко "@" даёт увеличение змейки на 3 дольки
-    - розовая птичка "%" на 10 секунд увеличивает число кроликов в 3 раза????
-    - голубой сундук "#" даёт ещё одну жизнь в случае смерти (будет ли эффект накопления???)
-    - синяя снежинка "*" отбирает 5 долек у змейки
-    
-сначала разобраться с ручными, а потом уже с ботами
-
-!!!!!!змейки боты!!!!!!!
-для них это тоже должно работать
-значит надо выставить иерархию среди атрибутов и кроликов?
-
-*/
 
 int main(int argc, char *argv[])
 {
@@ -75,7 +55,7 @@ void manual()
     int speed = 2*100000;
 
     // Создаем поле на весь терминал
-    Model *model = new Model(w.ws_col - 2, w.ws_row - 3, num_snakes, false);
+    Model *model = new Model(w.ws_col - 2, w.ws_row - 4 , num_snakes, false);
 
     View view;
 
@@ -91,13 +71,13 @@ void test(int runs)
     
     std::vector<int> wins(3, 0);
     int num_snakes = 0;
-    int speed = 2*100000;
+    int speed = 10000;
 
     std::cout << "Ждём...оно играет..." << std::endl;
 
     for (int i = 0; i < runs; i++)
     {
-        Model *model = new Model(w.ws_col - 2, w.ws_row - 3, num_snakes, true);
+        Model *model = new Model(w.ws_col - 2, w.ws_row - 4 , num_snakes, true);
         View view(true);
         Controller controller(model, view, speed, num_snakes, true);
         controller.run();

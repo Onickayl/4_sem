@@ -2,36 +2,20 @@
 #define VIEW_H
 
 #include "model.h"
-#include <string>
 
 class View 
 {
-private:
-    std::string buffer;  // буфер для устранения мигания
-    // Рисуем в память (в строку buffer) — это быстро и незаметно. Выводим всё сразу одним куском
-    std::vector<int> colorBuffer;  // ← новый буфер для цветов
-    bool silent;
-    
-    // ANSI escape последовательности
-    void clearScreen();
-    void gotoxy(int x, int y);
-    void hideCursor();
-    void showCursor();
-    void setColor(int color);
-    void resetColor();
-    
 public:
-    View(bool silent_mode = false);     // конструктор — вызывается при создании объекта        
-    ~View();    // деструктор — вызывается при уничтожении объекта (вернет курсор обратно)
+    virtual ~View() = default;                      // виртуальный деструктор
     
-    // Отрисовка всего
-    void render(const Model& model);
-    void showGameOver();
-    
-    // Проверка нажатия клавиши (для Controller)
-    bool keyPressed();
-    int getKey();
+    virtual void render(const Model& model) = 0;    // отрисовка
+    virtual bool keyPressed() = 0;                  // нажата клавиша?
+    virtual int getKey() = 0;                       // какая клавиша?
+    virtual void showGameOver() = 0;                // показать конец игры
 };
 
-#endif
+/*
+... = 0 значит, что у самого View нет реализации этого метода, его обязаны предоставить классы-наследники
+*/
 
+#endif

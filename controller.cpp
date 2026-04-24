@@ -1,4 +1,7 @@
 #include "controller.h"
+#include "view.h"
+#include "terminal_view.h"
+#include "sfml_view.h"
 #include <unistd.h>
 #include <sys/ioctl.h>
 
@@ -8,8 +11,8 @@
 #define KEY_RIGHT 1002
 #define KEY_LEFT  1003
 
-Controller::Controller(Model *m, View &v, int snake_speed, int num, bool bots)
-    : model(m), view(v), running(true), speed(snake_speed), num_snakes(num), bots_enabled(bots) {}
+Controller::Controller(Model *m, View *v, int snake_speed, int num, bool bots, bool use_sfml)
+    : model(m), view(v), running(true), speed(snake_speed), num_snakes(num), bots_enabled(bots), is_sfml(use_sfml) {}
 
 Controller::~Controller()
 {
@@ -18,126 +21,143 @@ Controller::~Controller()
 
 void Controller::run()
 {
+    sf::Clock clock;                    // таймер для контроля скорости игры
+    float timer = 0.0f;                 // накопленное время
+    float delay = speed / 1000000.0f;   // переводим микросекунды в секунды
+                                        // например, 100000 = 0.1 секунды
+
+    // защита от слишком маленькой задержки
+    if (delay < 0.03f) 
+    {
+        delay = 0.03f;
+    }
 
     struct winsize old_size;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &old_size);
+    if (!is_sfml && !bots_enabled)
+    {
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &old_size);
+    }
 
     while (running)
     {
-        if (bots_enabled == 0)
+
+// ручной режим
+        if (!bots_enabled)
         {
-            // ручной режим
-
-            struct winsize new_size;
-            ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_size);
-
-            if (new_size.ws_col != old_size.ws_col || new_size.ws_row != old_size.ws_row)
+            if (!is_sfml)  // только для терминала
             {
-                resize_game(new_size.ws_col - 2, new_size.ws_row - 4 );
-                old_size = new_size;
+                struct winsize new_size;
+                ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_size);
+                
+                if (new_size.ws_col != old_size.ws_col || new_size.ws_row != old_size.ws_row)
+                {
+                    resize_game(new_size.ws_col - 2, new_size.ws_row - 4);
+                    old_size = new_size;
+                }
             }
 
-            if (view.keyPressed())
+            if (view->keyPressed())
             {
-                int key = view.getKey();
+                int key = view->getKey();
 
                 switch (key)
                 {
                 case KEY_UP:
-                    if (model->getDirection(0) != 2)
-                        model->setDirection(0, 0);
+                    model->setDirection(0, 0); 
                     break;
                 case KEY_RIGHT:
-                    if (model->getDirection(0) != 3)
-                        model->setDirection(0, 1);
+                    model->setDirection(0, 1); 
                     break;
                 case KEY_DOWN:
-                    if (model->getDirection(0) != 0)
-                        model->setDirection(0, 2);
+                    model->setDirection(0, 2); 
                     break;
                 case KEY_LEFT:
-                    if (model->getDirection(0) != 1)
-                        model->setDirection(0, 3);
+                    model->setDirection(0, 3);  
                     break;
-
-                case 'w':
-                case 'W':
-                    if (model->getDirection(1) != 2)
-                        model->setDirection(1, 0);
+                case 'w': case 'W':
+                    model->setDirection(1, 0);
                     break;
-                case 'd':
-                case 'D':
-                    if (model->getDirection(1) != 3)
-                        model->setDirection(1, 1);
+                case 'd': case 'D':
+                    model->setDirection(1, 1);
                     break;
-                case 's':
-                case 'S':
-                    if (model->getDirection(1) != 0)
-                        model->setDirection(1, 2);
+                case 's': case 'S':
+                    model->setDirection(1, 2);
                     break;
-                case 'a':
-                case 'A':
-                    if (model->getDirection(1) != 1)
-                        model->setDirection(1, 3);
+                case 'a': case 'A':
+                    model->setDirection(1, 3);
                     break;
-
-                case 'q':
-                case 'Q':
+                case 'q': case 'Q':
                     running = false;
                     return;
-                case 'p':
-                case 'P':
-                {
-                    while (!view.keyPressed()) // пока нет нажатой клавы, ждём
-                    {
-                        usleep(100000);
-                    }
-
-                    view.getKey();
+                case 'p': case 'P':
+                    model->togglePause();  // просто переключаем паузу, без ожидания
                     break;
-                }
+                
                 }
             }
 
-            model->update(); // обновляем состояние игры
 
-            // проверка
-            if (model->isGameOver())
+            // логика - только по таймеру
+            float time = clock.getElapsedTime().asSeconds();
+            clock.restart();
+
+            // защита от слишком больших значений (если игра подвисла)
+            if (time > 0.1f) 
             {
-                view.showGameOver();
-
-                while (true)
-                {
-                    if (view.keyPressed())
-                    {
-                        int key = view.getKey();
-
-                        if (key == 'q' || key == 'Q')
-                        {
-                            break;
-                        }
-                    }
-
-                    usleep(100000);
-                }
-
-                running = false;
-                break;
+                time = 0.1f;
             }
-            view.render(*model); // рисуем новый кадр
-            usleep(speed);       // ждём
+            
+            timer += time;
+
+            if (timer > delay)
+            {
+                timer -= delay;
+                model->update(); // змейка делает шаг
+
+                if (model->isGameOver()) 
+                {
+                    view->showGameOver();
+                    running = false;
+                }
+            }
+            
+        }
+// режим тестирования ботов (без отрисовки)
+        else
+        {
+            float time = clock.getElapsedTime().asSeconds();
+            clock.restart();
+            
+            if (time > 0.1f) 
+            {
+                time = 0.1f;
+            }
+
+            timer += time;
+            
+            while (timer >= delay && running)
+            {
+                timer -= delay;
+                model->update();
+                
+                if (model->isGameOver())
+                {
+                    running = false;
+                }
+            }
+        }
+
+        // отрисовка
+        view->render(*model);
+
+        // чтобы компьютер не работал на износ, когда ничего не происходит
+        if (!is_sfml)
+        {
+            usleep(10000);  // 10 мс для терминала
         }
         else
         {
-            // в режиме прогонов — только update
-            model->update();
-
-            usleep(10000);  // небольшая задержка (10 мс)
-
-            if (model->isGameOver())
-            {
-                running = false;
-            }
+            sf::sleep(sf::milliseconds(5));  // 5 мс для SFML
         }
     }
 }
@@ -147,7 +167,8 @@ void Controller::resize_game(int new_width, int new_height)
 // сохранить состояние
     std::vector<Snake> saved_snakes = model->getSnakes();
     std::list<Rabbit> saved_rabbits = model->getRabbits();
-    //std::list<Apple> saved_apples = model->getApples();
+    std::list<Apple> saved_apples = model->getApples();
+    std::list<Snowflake> saved_snowflakes = model->getSnowflakes();
 
 // создать новую модель
     Model *new_model = new Model(new_width, new_height, num_snakes);
@@ -191,7 +212,6 @@ void Controller::resize_game(int new_width, int new_height)
     }
     
 // перенести яблоки
-/*
     new_model->getApples().clear();
     for (const auto &apple : saved_apples)
     {
@@ -201,7 +221,18 @@ void Controller::resize_game(int new_width, int new_height)
             new_model->getApples().push_back(apple);
         }
         // яблоки за границей — просто теряются
-    }*/
+    }
+
+// перенести снежинки
+    new_model->getSnowflakes().clear();
+    for (const auto &snowflake : saved_snowflakes)
+    {
+        if (snowflake.pos.x >= 0 && snowflake.pos.x < new_width &&
+            snowflake.pos.y >= 0 && snowflake.pos.y < new_height)
+        {
+            new_model->getSnowflakes().push_back(snowflake);
+        }
+    }
 
 
 // удалить старую модель и заменить новой

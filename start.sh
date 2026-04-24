@@ -1,1 +1,1 @@
-g++ -std=c++11 main.cpp model.cpp view.cpp controller.cpp -o snake
+g++ -std=c++11 main.cpp model.cpp terminal_view.cpp sfml_view.cpp controller.cpp -o snake -lsfml-graphics -lsfml-window -lsfml-system

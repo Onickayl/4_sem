@@ -1,5 +1,7 @@
 #include "model.h"
 #include "view.h"
+#include "terminal_view.h"
+#include "sfml_view.h"
 #include "controller.h"
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -8,98 +10,129 @@
 
 struct winsize w;
 
-void manual();
-void test(int runs);
+void manual(bool use_sfml);
+void test(int runs, bool use_sfml);
 
 
 int main(int argc, char *argv[])
 {
 
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    //int width = w.ws_col - 2;
 
-    if (argc >= 2)
+    bool use_sfml = false;
+    std::string mode = "";
+    int runs = 10;
+
+    if (argc == 1)
     {
-        if (strcmp(argv[1], "manual") == 0)
-        {
-            manual();
-        }
-        else if (strcmp(argv[1], "test") == 0)
-        {
-            int runs = 10;
+        std::cout << "Please write: ./snake [manual|test N] [sfml]" << std::endl;
+        return 0;
+    }
 
-            if (argc >= 3)
-            {
-                runs = atoi(argv[2]);
-            }
-                
-            test(runs);
-        }
-        else
+// аргументы командной строки
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "sfml") == 0)
         {
-            std::cout << "Использование: ./snake [manual|test N]" << std::endl;
+            use_sfml = true;
+        }
+        else if (strcmp(argv[i], "manual") == 0)
+        {
+            mode = "manual";
+        }
+        else if (strcmp(argv[i], "test") == 0)
+        {
+            mode = "test";
+            if (i + 1 < argc && atoi(argv[i + 1]) > 0)
+            {
+                runs = atoi(argv[i + 1]);
+                i++;
+            }
         }
     }
-    else
+
+    if (mode == "manual")
     {
-        // По умолчанию — ручной режим
-        manual();
+        manual(use_sfml);
+    }
+    else if (mode == "test")
+    {
+        test(runs, use_sfml);
     }
 
     return 0;
 }
 
-void manual()
+void manual(bool use_sfml)
 {
     int num_snakes = 2;
     int speed = 2*100000;
 
-    // Создаем поле на весь терминал
-    Model *model = new Model(w.ws_col - 2, w.ws_row - 4 , num_snakes, false);
+    Model *model = nullptr;
+    View *view = nullptr;   // указатель ни на что не указывает, иначе там будет мусор(
 
-    View view;
+    if (use_sfml)
+    {   
+        model = new Model(40, 25, num_snakes, false);
+        view = new SfmlView(40, 25);
+    }
+    else
+    {
+        model = new Model(w.ws_col - 2, w.ws_row - 4, num_snakes, false);
+        view = new TerminalView(false); // не silent
+    }
 
-    Controller controller(model, view, speed, num_snakes, false);
+    Controller controller(model, view, speed, num_snakes, false, use_sfml);
 
     // Запускаем игру
     controller.run();
 
+    delete view;
 }
 
-void test(int runs)
+void test(int runs, bool use_sfml)
 {
     
-    std::vector<int> wins(3, 0);
+    std::vector<int> wins(2, 0);
     int num_snakes = 0;
-    int speed = 10000;
+    int speed = 10000*20;
 
+    std::cout << "Запуск " << runs << " прогонов..." << std::endl;
     std::cout << "Ждём...оно играет..." << std::endl;
 
     for (int i = 0; i < runs; i++)
     {
-        Model *model = new Model(w.ws_col - 2, w.ws_row - 4 , num_snakes, true);
-        View view(true);
-        Controller controller(model, view, speed, num_snakes, true);
+        Model *model = nullptr;
+        View *view = nullptr;
+        if (use_sfml)
+        {
+            model = new Model(40, 25, num_snakes, true);
+            view = new SfmlView(40, 25, true);
+        }
+        else
+        {
+            model = new Model(w.ws_col - 2, w.ws_row - 4, num_snakes, true);
+            view = new TerminalView(true); // silent = true (быстрые прогоны)
+        }
+
+        Controller controller(model, view, speed, num_snakes, true, use_sfml);
         controller.run();
 
-        int winner = model->getWinner(); 
+        int winner = model->getWinner();
 
-        if (winner >= 0) 
+        if (winner >= 0)
         {
             wins[winner]++;
         }
-        
-        //std::cout << "Прогон " << i + 1 << " завершён" << std::endl;
+
+        delete view;
     }
 
 // Вывод статистики
     std::cout << "\n=== СТАТИСТИКА ===" << std::endl;
     std::cout << "Тупой бот: " << wins[0] << " побед" << std::endl;
     std::cout << "Осторожный бот: " << wins[1] << " побед" << std::endl;
-    std::cout << "Умный бот: " << wins[2] << " побед" << std::endl;
+    //std::cout << "Умный бот: " << wins[2] << " побед" << std::endl;
     
 }
 
-/*
-чтобы запустить надо: g++ -std=c++11 main.cpp model.cpp view.cpp controller.cpp -o snake
-*/

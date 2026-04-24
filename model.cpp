@@ -6,7 +6,7 @@
 
 // Конструктор
 Model::Model(int w, int h, int num_Snakes, bool bots) 
-    : width(w), height(h), bots_enabled(bots), gameOver(false), eaten_rabbits(0), eaten_apples(0), eaten_snowflakes(0)
+    : width(w), height(h), bots_enabled(bots), gameOver(false), eaten_rabbits(0), eaten_apples(0), eaten_snowflakes(0), paused(false)
 {
     // инициализируем генератор случайных чисел
     static bool seeded = false;
@@ -51,11 +51,11 @@ Model::Model(int w, int h, int num_Snakes, bool bots)
         num_bot++;
 
         // умный бот 1
-        Snake smart(width - 5, height - 5);
-        smart.bot_type = 3;
-        smart.color = 35;
-        snakes.push_back(smart);
-        num_bot++;
+        // Snake smart(width - 5, height - 5);
+        // smart.bot_type = 3;
+        // smart.color = 35;
+        // snakes.push_back(smart);
+        // num_bot++;
     }
 
 // Добавляем кроликов
@@ -69,7 +69,7 @@ Model::Model(int w, int h, int num_Snakes, bool bots)
 void Model::update()
 {
 
-    if (isGameOver())
+    if (isGameOver() || paused)
     {
         return;
     }
@@ -83,16 +83,32 @@ void Model::update()
             continue; // пропускаем мертвых
         }
 
+        // новое направление - нельзя развернуться на 180 градусов
+        if ((snake.direction == 0 && snake.next_direction == 2) ||
+            (snake.direction == 2 && snake.next_direction == 0) ||
+            (snake.direction == 1 && snake.next_direction == 3) ||
+            (snake.direction == 3 && snake.next_direction == 1))
+        {
+            // разворот запрещён - оставляем текущее направление
+            snake.next_direction = snake.direction;
+        }
+        else
+        {
+            // можно применить новое направление
+            snake.direction = snake.next_direction;
+        }
+
 // 1. получаем голову (front() - первый элемент)
         Position head = snake.body.front();
 
     // боты для режима test
-        if (bots_enabled == 1)
+        if (bots_enabled)
         {
             if (snake.bot_type == 1)
             {   
         // тупой бот
                 bot_dir(snake, head);
+                snake.next_direction = snake.direction;  // синхронизируем для ботов
             }
             else if (snake.bot_type == 2)
             { 
@@ -359,16 +375,6 @@ void Model::bot_dir(Snake &snake, Position head)
     snake.direction = newDir;
 }
 
-/*void Model::smart_bot(Position head, int index, std::vector<Snake> &snakes, int width, int height)
-{
-/*
-надо массив? направлений, т.е. мы как будто замираем, а потом смотрим все направления к кучке? кроликов 
-и выбираем кратчайший безопасный путь
-
-    int *directions;
-
-}*/
-
 // Проверки
 bool Model::check_wall(Position newHead, int width, int height)
 {
@@ -523,7 +529,12 @@ int Model::getHeight() const
 
 void Model::setDirection(int id_snake, int dir)
 {
-    snakes[id_snake].direction = dir;
+    //snakes[id_snake].direction = dir;
+    if (id_snake >= 0 && id_snake < snakes.size())
+    {
+        // сохраняем новое направление, не применяем сразу
+        snakes[id_snake].next_direction = dir;
+    }
 }
 
 int Model::getDirection(int id_snake) const

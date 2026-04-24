@@ -25,11 +25,12 @@ struct Snake
     std::list<Position> body;       // список позиций сегментов змейки
     bool isAlive;                   // флаг только для змеек
     int direction;                  // 0=вверх, 1=вправо, 2=вниз, 3=влево
+    int next_direction;             // новое направление (будет применено при следующем шаге)
     int color;                      // цвет змейки 
     int bot_type;                   // 0 - не бот 1 - тупой 2 - осторожный
     int grow;                       // счётчик роста
     
-    Snake(int x, int y) : isAlive(true), direction(1), color(32), bot_type(0), grow(0)
+    Snake(int x, int y) : isAlive(true), direction(1), next_direction(1), color(32), bot_type(0), grow(0)
     {
         // Создаем змейку из 3 сегментов
         body.push_back(Position(x, y));         // голова
@@ -83,6 +84,7 @@ private:
     int eaten_rabbits;                   // кол-во съеденных кроликов
     int eaten_apples;
     int eaten_snowflakes;
+    bool paused;
 
 public:
 
@@ -106,8 +108,9 @@ public:
     int getDirection(int id_snake) const;
     void bot_dir(Snake &snake, Position head);
 
-    // smart bot
-    //void smart_bot(Position head, int index, std::vector<Snake> &snakes, int width, int height);
+    // пауза
+    void togglePause() { paused = !paused; }
+    bool isPaused() const { return paused; }
     
     // Геттеры (методы для получения данных)
     const std::vector<Snake>& getSnakes() const;
@@ -122,6 +125,7 @@ public:
     std::vector<Snake>& getSnakes() { return snakes; }
     std::list<Rabbit>& getRabbits() { return rabbits;}
     std::list<Apple>& getApples()   { return apples; }
+    std::list<Snowflake>& getSnowflakes() { return snowflakes; }
     
     int getWidth() const;
     int getHeight() const;

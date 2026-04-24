@@ -7,15 +7,16 @@
 class Controller 
 {
 private:
-    Model* model;      // указатель на модель
-    View& view;        // ссылка на представление
-    bool running;      // флаг работы игры
-    int speed;         // скорость (задержка в мкс)
-    int num_snakes;    // кол-во змеек
-    bool bots_enabled; // боты включены
+    Model* model;       // указатель на модель
+    View* view;         // указатель на представление (абстрактный класс)
+    bool running;       // флаг работы игры
+    int speed;          // скорость (задержка в мкс)
+    int num_snakes;     // кол-во змеек
+    bool bots_enabled;  // боты включены
+    bool is_sfml;       // флаг для SFML режима
     
 public:
-    Controller(Model* m, View& v, int snake_speed, int num, bool bots = false);
+    Controller(Model* m, View*v, int snake_speed, int num, bool bots = false, bool use_sfml = false);
     ~Controller();
     
     void run();        // главный цикл игры

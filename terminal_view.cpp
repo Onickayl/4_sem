@@ -1,4 +1,5 @@
 #include "view.h"
+#include "terminal_view.h"
 #include <iostream>
 #include <unistd.h>
 #include <termios.h>    //структура, хранящая настройки терминала (скорость, режимы ввода, и т.д.)
@@ -22,7 +23,7 @@
 // original_tio сохраняет исходные настройки, чтобы мы могли их восстановить
 static struct termios original_tio;
 
-View::View(bool silent_mode) : silent(silent_mode)
+TerminalView::TerminalView(bool silent_mode) : silent(silent_mode)
 {
     if (!silent)
     {
@@ -50,7 +51,7 @@ View::View(bool silent_mode) : silent(silent_mode)
 }
 
 
-View::~View() 
+TerminalView::~TerminalView() 
 {
     if (!silent) 
     {
@@ -59,45 +60,45 @@ View::~View()
     }
 }
 
-void View::clearScreen() 
+void TerminalView::clearScreen() 
 {
     std::cout << "\033[2J\033[H";
     // 2J - очищает весь экран
     // H перемещает курсор в левый верхний угол (0,0)
 }
 
-void View::gotoxy(int x, int y) 
+void TerminalView::gotoxy(int x, int y) 
 {
     std::cout << "\033[" << y << ";" << x << "H";
 }
 
-void View::hideCursor() 
+void TerminalView::hideCursor() 
 {
     std::cout << "\033[?25l";
     //?25 — код, отвечающий за видимость курсора
     // l — low (установить в 0, выключить)
 }
 
-void View::showCursor() 
+void TerminalView::showCursor() 
 {
     std::cout << "\033[?25h";
     // h — high (установить в 1, включить)
 }
 
-void View::setColor(int color) 
+void TerminalView::setColor(int color) 
 {
     std::cout << "\033[" << color << "m";
     // все последующие символы будут печататься этим цветом
 }
 
-void View::resetColor() 
+void TerminalView::resetColor() 
 {
     std::cout << "\033[0m";
     // сбросить все атрибуты (цвет, жирность, и т.д.)
 }
 
 // функция проверки, нажата ли клавиша, без ожидания
-bool View::keyPressed() 
+bool TerminalView::keyPressed() 
 {
     struct timeval tv = {0, 0};     //  ждать 0 секунд - проверить и сразу вернуться {сек, микросек}
     fd_set fds;                     // набор файловых дескрипторов (файлов, сокетов, терминалов)
@@ -109,7 +110,7 @@ bool View::keyPressed()
     return FD_ISSET(STDIN_FILENO, &fds);        //проверяет, есть ли именно клавиатура в наборе дескрипторов, готовых к чтению (1/0)
 }
 
-int View::getKey() 
+int TerminalView::getKey() 
 {
     // читаем 1 символ с клавиатуры
     char ch;
@@ -159,7 +160,7 @@ int View::getKey()
 }
 
 
-void View::render(const Model& model) 
+void TerminalView::render(const Model& model) 
 {
     if (silent) 
     {
@@ -311,11 +312,8 @@ void View::render(const Model& model)
     std::cout << "* ";
     setColor(WHITE);
     std::cout << "(-5) = " << model.getEaten_snowflakes() << std::endl;
-    resetColor();
-
 
     resetColor();
-
 
     // очищаем всё, что ниже рамки
     std::cout << "\033[J";  // очистить от курсора до конца экрана
@@ -323,7 +321,7 @@ void View::render(const Model& model)
 }
 
 
-void View::showGameOver()
+void TerminalView::showGameOver()
 {
     if (silent) 
     {
@@ -344,5 +342,19 @@ void View::showGameOver()
     std::cout.flush();   // сразу на экран
     
 
+    // ждём нажатия q/Q перед выходом
+    while (true)
+    {
+        if (keyPressed())
+        {
+            int key = getKey();
+            if (key == 'q' || key == 'Q')
+            {
+                break;
+            }
+        }
+        
+        usleep(100000);  // небольшая задержка
+    }
 }
 

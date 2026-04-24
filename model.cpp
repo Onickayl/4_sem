@@ -131,6 +131,7 @@ void Model::update()
                     if (is_safe(head, i, snakes, width, height, d))
                     {
                         snake.direction = d;
+                        snake.next_direction = d;
                         found = true;
                         break;
                     }
@@ -140,6 +141,7 @@ void Model::update()
                 if (!found)
                 {
                     snake.direction = old_dir;
+                    snake.next_direction = old_dir;
                 }
             }
         }

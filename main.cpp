@@ -102,7 +102,7 @@ void test(int runs, bool use_sfml)
     
     std::vector<int> wins(2, 0);
     int num_snakes = 0;
-    int speed = 10000*20;
+    int speed = 10000;
 
     std::cout << "Запуск " << runs << " прогонов..." << std::endl;
     std::cout << "Ждём...оно играет..." << std::endl;
@@ -111,7 +111,7 @@ void test(int runs, bool use_sfml)
     {
         Model *model = nullptr;
         View *view = nullptr;
-        
+
         if (use_sfml)
         {
             model = new Model(40, 25, num_snakes, true);

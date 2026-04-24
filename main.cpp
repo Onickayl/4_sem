@@ -10,6 +10,10 @@
 
 struct winsize w;
 
+// глобальный шрифт 
+sf::Font global_font;
+bool font_loaded = false;
+
 void manual(bool use_sfml);
 void test(int runs, bool use_sfml);
 
@@ -22,6 +26,9 @@ int main(int argc, char *argv[])
     bool use_sfml = false;
     std::string mode = "";
     int runs = 10;
+
+    // загружаем шрифт один раз для всех SFML окон
+    font_loaded = global_font.loadFromFile("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf");
 
     if (argc == 1)
     {
@@ -74,7 +81,7 @@ void manual(bool use_sfml)
     if (use_sfml)
     {   
         model = new Model(40, 25, num_snakes, false);
-        view = new SfmlView(40, 25);
+        view = new SfmlView(40, 25, global_font, false);
     }
     else
     {
@@ -104,10 +111,11 @@ void test(int runs, bool use_sfml)
     {
         Model *model = nullptr;
         View *view = nullptr;
+        
         if (use_sfml)
         {
             model = new Model(40, 25, num_snakes, true);
-            view = new SfmlView(40, 25, true);
+           view = new SfmlView(40, 25, global_font, true);
         }
         else
         {

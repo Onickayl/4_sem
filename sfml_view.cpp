@@ -1,8 +1,8 @@
 #include "sfml_view.h"
 #include <iostream>
 
-SfmlView::SfmlView(int width, int height, bool silent_mode)
-    : width(width), height(height), cell_size(20), silent(silent_mode)
+SfmlView::SfmlView(int width, int height, const sf::Font& externalFont, bool silent_mode)
+    : width(width), height(height), font(externalFont), silent(silent_mode)
 {
 
     if (silent)
@@ -10,6 +10,23 @@ SfmlView::SfmlView(int width, int height, bool silent_mode)
         // в тихом режиме окно не создаём
         return;
     }
+
+    // вычисляем оптимальный размер клетки
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+    float available_height = desktop.height * 0.7f;              // 70% высоты экрана
+    int calculated_cell_size = static_cast<int>(available_height / (height + 2));
+    
+    if (calculated_cell_size < 15) 
+    {
+        calculated_cell_size = 15;
+    }
+
+    if (calculated_cell_size > 60) 
+    {
+        calculated_cell_size = 60;
+    }
+    
+    cell_size = calculated_cell_size;
 
     // Создаём окно: ширина = (поле + рамка 2) * размер клетки
     int windowWidth = (width + 2) * cell_size;
@@ -20,11 +37,7 @@ SfmlView::SfmlView(int width, int height, bool silent_mode)
     // ограничим fps для плавности
     window.setFramerateLimit(60);
 
-    // Загружаем шрифт (нужен файл шрифта, например, arial.ttf)
-    if (!font.loadFromFile("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"))
-    {
-        std::cout << "шрифт не загружен" << std::endl;
-    }
+    // используем переданный шрифт - уже загружен
     text.setFont(font);
     text.setCharacterSize(cell_size - 5);
     text.setFillColor(sf::Color::White);

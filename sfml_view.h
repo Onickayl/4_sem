@@ -11,7 +11,7 @@ private:
     int cell_size;              // размер одной клетки в пикселях (например, 30)
     int width;                  // ширина поля в клетках
     int height;                 // высота поля в клетках
-    sf::Font font;              // шрифт
+    const sf::Font& font;       // теперь это ссылка на внешний шрифт
     sf::Text text;
     bool silent;  
 
@@ -19,7 +19,7 @@ private:
     void draw_text(int x, int y, const std::string& str, sf::Color color, int size = 20);
 
 public:
-    SfmlView(int width, int height, bool silent_mode = false);
+    SfmlView(int width, int height, const sf::Font& externalFont, bool silent_mode = false);
     ~SfmlView();
 
     void render(const Model& model) override;

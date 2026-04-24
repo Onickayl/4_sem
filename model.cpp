@@ -5,8 +5,8 @@
 #include <stdio.h>
 
 // Конструктор
-Model::Model(int w, int h, int num_Snakes, bool bots) 
-    : width(w), height(h), bots_enabled(bots), gameOver(false), eaten_rabbits(0), eaten_apples(0), eaten_snowflakes(0), paused(false)
+Model::Model(int w, int h, int num_Snakes, int num_dumb, int num_careful, bool bots, bool manual) 
+    : width(w), height(h), bots_enabled(bots), gameOver(false), eaten_rabbits(0), eaten_apples(0), eaten_snowflakes(0), paused(false), is_manual(manual)
 {
     // инициализируем генератор случайных чисел
     static bool seeded = false;
@@ -32,30 +32,27 @@ Model::Model(int w, int h, int num_Snakes, bool bots)
     }
 
 // Змей ботов
-    int num_bot = 0;
+    int num_bot = num_dumb + num_careful;
 
     if (bots_enabled == 1)
     {
         // тупой бот
-        Snake dumb(5, 5);
-        dumb.bot_type = 1;
-        dumb.color = 36;
-        snakes.push_back(dumb);
-        num_bot++;
+        for (int i = 0; i < num_dumb; i++)
+        {
+            Snake dumb(width/4 + 5*i, height/2 + 1 + (height/(2*num_dumb))*i);
+            dumb.bot_type = 1;
+            dumb.color = 36;
+            snakes.push_back(dumb);
+        }
 
         // осторожный бот
-        Snake careful(5, height - 5);
-        careful.bot_type = 2;
-        careful.color = 33;
-        snakes.push_back(careful);
-        num_bot++;
-
-        // умный бот 1
-        // Snake smart(width - 5, height - 5);
-        // smart.bot_type = 3;
-        // smart.color = 35;
-        // snakes.push_back(smart);
-        // num_bot++;
+        for (int i = 0; i < num_careful; i++)
+        {
+            Snake careful(width*0.65 + 5*i, height/2 + 1 + (height/(2*num_careful))*i);
+            careful.bot_type = 2;
+            careful.color = 33;
+            snakes.push_back(careful);
+        }
     }
 
 // Добавляем кроликов
@@ -276,20 +273,20 @@ void Model::update()
 // проверка gameover
 
     int count = 0;
-    int last_alive = -1;
+    int last_alive_type = -1;
 
     for (int i = 0; i < snakes.size(); i++) 
     {
         if (snakes[i].isAlive) 
         {
             count++;
-            last_alive = i;
+            last_alive_type = snakes[i].bot_type;
         }
     }
 
-    if (count == 1 && bots_enabled == true) 
+    if (count == 1 && !is_manual) 
     {
-        winner = last_alive;
+        winner = last_alive_type;
         gameOver = true;
     } 
     else if (count == 0) 
@@ -555,7 +552,7 @@ int Model::getWinner() const
                 return -1;  // больше одного живого
             }
 
-            winner = i;
+            winner = snakes[i].bot_type;
         }
     }
     return winner;

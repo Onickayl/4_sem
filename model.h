@@ -85,11 +85,12 @@ private:
     int eaten_apples;
     int eaten_snowflakes;
     bool paused;
+    bool is_manual;
 
 public:
 
     // Конструктор (вызывается при создании объекта)
-    Model(int w, int h, int num_Snakes = 1, bool bots = false);
+    Model(int w, int h, int num_Snakes = 1, int num_dumb = 0, int num_careful = 0, bool bots = false, bool manual = true);
     
     // Обновление состояния (один шаг игры)
     void update();

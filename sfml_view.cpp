@@ -260,8 +260,7 @@ int SfmlView::getKey()
         }
     }
 
-    // теперь опрашиваем состояние клавиш напрямую (мгновенно!)
-    // это и даёт ту самую "отзывчивость", которой не хватало
+    // теперь опрашиваем состояние клавиш напрямую - мгновенно
     
     // управление первой змейкой (стрелки)
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) return 1000;
@@ -300,7 +299,7 @@ void SfmlView::showGameOver()
     window.clear(sf::Color::Black);
 
     draw_text(100, 200, "GAME OVER", sf::Color::Red, 40);
-    draw_text(80, 250, "Press Q to quit", sf::Color::White, 20);
+    draw_text(100, 250, "Press q/Q to quit", sf::Color::White, 20);
 
     window.display();
 

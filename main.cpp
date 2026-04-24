@@ -14,8 +14,8 @@ struct winsize w;
 sf::Font global_font;
 bool font_loaded = false;
 
-void manual(bool use_sfml);
-void test(int runs, bool use_sfml);
+void manual(bool use_sfml, int num_snakes, int num_dumb, int num_careful, int speed);
+void test(int runs, bool use_sfml, int num_dumb, int num_careful, bool silent, int speed);
 
 
 int main(int argc, char *argv[])
@@ -58,34 +58,55 @@ int main(int argc, char *argv[])
         }
     }
 
+    int num_snakes = 0;
+    int num_dumb = 0;
+    int num_careful = 0;
+    bool silent = 0;
+    int speed = 0;
+
     if (mode == "manual")
     {
-        manual(use_sfml);
+        std::cout << "Num of manual snakes (no more than two): ";
+        std::cin >> num_snakes;
+    }
+
+    std::cout << "Num of dumb bots: ";
+    std::cin >> num_dumb;
+
+    std::cout << "Num of careful bots: ";
+    std::cin >> num_careful;
+    
+    std::cout << "Speed of snakes (10.000 - 200.000): ";
+    std::cin >> speed;
+
+    if (mode == "manual")
+    {
+        manual(use_sfml, num_snakes, num_dumb, num_careful, speed);
     }
     else if (mode == "test")
     {
-        test(runs, use_sfml);
+        std::cout << "With picture? (0 - no, 1 - yes): ";
+        std::cin >> silent;
+        test(runs, use_sfml, num_dumb, num_careful, silent, speed);
     }
 
     return 0;
 }
 
-void manual(bool use_sfml)
+void manual(bool use_sfml, int num_snakes, int num_dumb, int num_careful, int speed)
 {
-    int num_snakes = 2;
-    int speed = 2*100000;
 
     Model *model = nullptr;
     View *view = nullptr;   // указатель ни на что не указывает, иначе там будет мусор(
 
     if (use_sfml)
     {   
-        model = new Model(40, 25, num_snakes, false);
+        model = new Model(40, 25, num_snakes, num_dumb, num_careful, true, true); // false
         view = new SfmlView(40, 25, global_font, false);
     }
     else
     {
-        model = new Model(w.ws_col - 2, w.ws_row - 4, num_snakes, false);
+        model = new Model(w.ws_col - 2, w.ws_row - 4, num_snakes, num_dumb, num_careful, true, true); // false
         view = new TerminalView(false); // не silent
     }
 
@@ -97,15 +118,22 @@ void manual(bool use_sfml)
     delete view;
 }
 
-void test(int runs, bool use_sfml)
+void test(int runs, bool use_sfml, int num_dumb, int num_careful, bool silent, int speed)
 {
     
     std::vector<int> wins(2, 0);
     int num_snakes = 0;
-    int speed = 10000;
 
-    std::cout << "Запуск " << runs << " прогонов..." << std::endl;
-    std::cout << "Ждём...оно играет..." << std::endl;
+    //std::cout << "silent " << silent << std::endl;
+
+    if (!silent)
+    {
+        std::cout << "Запуск " << runs << " прогонов..." << std::endl;
+        std::cout << "Ждём...оно играет..." << std::endl;
+    }
+
+    // режим когда хотим видеть 
+    // вменяемый выбор аргуемнтов
 
     for (int i = 0; i < runs; i++)
     {
@@ -114,13 +142,13 @@ void test(int runs, bool use_sfml)
 
         if (use_sfml)
         {
-            model = new Model(40, 25, num_snakes, true);
-           view = new SfmlView(40, 25, global_font, true);
+            model = new Model(40, 25, num_snakes, num_dumb, num_careful, true, false);
+            view = new SfmlView(40, 25, global_font, !silent);
         }
         else
         {
-            model = new Model(w.ws_col - 2, w.ws_row - 4, num_snakes, true);
-            view = new TerminalView(true); // silent = true (быстрые прогоны)
+            model = new Model(w.ws_col - 2, w.ws_row - 4, num_snakes, num_dumb, num_careful, true, false);
+            view = new TerminalView(!silent);  
         }
 
         Controller controller(model, view, speed, num_snakes, true, use_sfml);
@@ -130,7 +158,7 @@ void test(int runs, bool use_sfml)
 
         if (winner >= 0)
         {
-            wins[winner]++;
+            wins[winner-1]++;
         }
 
         delete view;
